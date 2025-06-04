@@ -6,9 +6,21 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { ThemeModeScript } from "flowbite-react";
 
 import type { Route } from "./+types/root";
+
+import { useChangeLanguage } from "remix-i18next/react";
+import { useTranslation } from "react-i18next";
+import i18next from "~/i18next.server";
+
 import "./app.css";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  let locale = await i18next.getLocale(request);
+
+  return { locale };
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,15 +36,21 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  let { i18n } = useTranslation();
   return (
-    <html lang="en">
+    <html
+      lang={i18n.language}
+      dir={i18n.dir(i18n.language)}
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <ThemeModeScript />
       </head>
-      <body>
+      <body className=" bg-white dark:bg-gray-800">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -41,7 +59,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
+  useChangeLanguage(loaderData.locale);
   return <Outlet />;
 }
 
